@@ -1,0 +1,18 @@
+services:
+  db:
+    image: docker.io/postgis/postgis:18-3.6-alpine
+    container_name: db
+    ports: 5432:5432
+    env_file:
+      - conf/.env
+    network:
+      - db_network
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/sql:/docker-entrypoint-initdb.d:Z
+
+network:
+  db_network:
+  
+volumes:
+  pgdata:
