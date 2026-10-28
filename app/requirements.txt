@@ -1,0 +1,2 @@
+pyopensky==2.18
+geopandas==1.2.0
