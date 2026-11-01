@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE flight(
     id SERIAL PRIMARY KEY,
     callsign TEXT NOT NULL,
-    icao24 TEXT,
+    time_range tsrange,
     geometry geometry(LINESTRINGZ,4326) NOT NULL
 );
 

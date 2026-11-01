@@ -1,8 +1,13 @@
 from typing import Tuple
 from shapely import Point
+from pandas import date_range
 from datetime import datetime
+from shapely import LineString
+from ..utils.flight import Flight
 from pyopensky.trino import Trino
+from collections.abc import Iterator 
 from geopandas import GeoDataFrame, points_from_xy
+from ..utils.validation import type_check, value_check_within, value_check_greater_than
 
 
 class OpenSkyProvider:
@@ -14,7 +19,7 @@ class OpenSkyProvider:
         time_start: datetime,
         time_end: datetime,
         bbx: Tuple[float, float, float, float],
-    ):
+    ) -> Iterator[Flight]:
         """
         This function is dedicated to aviation data requesting.
 
@@ -23,65 +28,65 @@ class OpenSkyProvider:
             time_end(datetime.datetime): The time up until which data is collected
             bbx(Tuple[float, float, float, float]): A bounding box determining the area
                 for which data is collected. Must be in format:
-                `[min_longitude, min_latitude, max_longitude, max_latitude]'
+                `[min_longitude, min_latitude, max_longitude, max_latitude]'Tangier Island
 
         Returns:
             (GeoDataFrame): Collected data in EPSG:4326 coordinate reference system
         """
         # Sanity check
-        if not isinstance(time_start, datetime):
-            raise TypeError(
-                f"time_start is of type {type(time_start)}. Should be datetime.datetime"
-            )
-        if not isinstance(time_end, datetime):
-            raise TypeError(
-                f"time_end is of type {type(time_end)}. Should be datetime.datetime"
-            )
+        type_check(bbx, Tuple, "bbx")
+        type_check(time_start, datetime, "time_start")
+        type_check(time_end, datetime, "time_end")
         if time_end < time_start:
             raise ValueError("end_time must be later than time_start")
-        if not isinstance(bbx, Tuple):
-            raise TypeError("Provided bounding box must be of a type Tuple")
         for i in bbx:
-            if not isinstance(i, (float, int)):
-                raise TypeError(
-                    f"Bounding box coordinates must be of a type float not {type(i)}"
-                )
-        if bbx[2] < bbx[0]:
-            raise ValueError(
-                "A bounding box must be in format: "
-                "[min_longitude, min_latitude, max_longitude, max_latitude] "
-                f"min_longitude = {bbx[0]} can't be greater than max_longitude = {bbx[2]}"
-            )
-        if bbx[3] < bbx[1]:
-            raise ValueError(
-                "A bounding box must be in format: "
-                "[min_longitude, min_latitude, max_longitude, max_latitude] "
-                f"min_latitude = {bbx[1]} can't be greater than max_latitude = {bbx[3]}"
-            )
-        if -180 > bbx[0] or 180 < bbx[0]:
-            raise ValueError(
-                f"min_longitude must be in range <-180, 180> and can't be {bbx[0]}"
-            )
-        if -180 > bbx[2] or 180 < bbx[2]:
-            raise ValueError(
-                f"max_longitude must be in range <-180, 180> and can't be {bbx[2]}"
-            )
-        if -90 > bbx[1] or bbx[1] > 90:
-            raise ValueError(
-                f"min_latitude must be in range <-90, 90> and can't be {bbx[0]}"
-            )
-        if -90 > bbx[3] or bbx[3] > 90:
-            raise ValueError(
-                f"max_latitude must be in range <-90, 90> and can't be {bbx[3]}"
+            type_check(i, (float, int), "bounding box coordinate")
+        value_check_greater_than(
+            obj=bbx[2], val_min=bbx[0], object_name="max_longitude"
+        )
+        value_check_greater_than(obj=bbx[3], val_min=bbx[1], object_name="max_latitude")
+        value_check_within(obj=bbx[0], min=-180, max=180, object_name="min_longitude")
+        value_check_within(obj=bbx[2], min=-180, max=180, object_name="max_longitude")
+        value_check_within(obj=bbx[1], min=-90, max=90, object_name="min_latitude")
+        value_check_within(obj=bbx[3], min=-90, max=90, object_name="max_latitude")
+
+        # Request, prepare and return data
+        gdf = self.request_vertices(time_start, time_end, bbx)
+        prepared_gdf = self.prepare_vertices(gdf)
+
+        for identifier in prepared_gdf["identifier"].unique():
+            flight_vertices = prepared_gdf[prepared_gdf["identifier"] == identifier]
+            
+            yield Flight(
+                callsign=flight_vertices["callsign"].iloc[0],
+                geometry=LineString(flight_vertices.geometry),
+                time_range=(
+                    flight_vertices["time"].min(),
+                    flight_vertices["time"].max(),
+                ),
+                properties={"icao24": flight_vertices["icao24"].iloc[0]},
+                vertices=flight_vertices
             )
 
-        # Request data
+    def prepare_vertices(self, gdf):
+        cropped_gdf = gdf[["callsign", "icao24", "time", "geometry"]].copy()
+        cropped_gdf["identifier"] = cropped_gdf[["callsign", "icao24"]].agg(
+            "-".join, axis=1
+        )
+        return cropped_gdf
+
+
+    def request_vertices(self, time_start, time_end, bbx):
         df = self.trino.history(start=time_start, stop=time_end, bounds=bbx)
 
         if df is None:
             raise Exception("No aviation data collected!")
 
         # Generate response
+        df = df.sort_values("time")
+        df = df[df["onground"] == False]
+        df = df.dropna(subset=["callsign", "icao24", "lat", "lon", "time"])
+
         return GeoDataFrame(
             df, geometry=points_from_xy(df.lon, df.lat), crs="EPSG:4326"
         )
@@ -89,9 +94,8 @@ class OpenSkyProvider:
 
 if __name__ == "__main__":
     osp = OpenSkyProvider()
-    gdf = osp.get(
+    gdf, flights = osp.get(
         time_start=datetime(minute=0, hour=12, day=1, month=12, year=2025),
         time_end=datetime(minute=20, hour=12, day=1, month=12, year=2025),
         bbx=(20.61, 51.82, 21.52, 52.4),
     )
-    print(gdf.head())
