@@ -5,7 +5,7 @@ from datetime import datetime
 from shapely import LineString
 from ..utils.flight import Flight
 from pyopensky.trino import Trino
-from collections.abc import Iterator 
+from collections.abc import Iterator
 from geopandas import GeoDataFrame, points_from_xy
 from ..utils.validation import type_check, value_check_within, value_check_greater_than
 
@@ -28,7 +28,7 @@ class OpenSkyProvider:
             time_end(datetime.datetime): The time up until which data is collected
             bbx(Tuple[float, float, float, float]): A bounding box determining the area
                 for which data is collected. Must be in format:
-                `[min_longitude, min_latitude, max_longitude, max_latitude]'Tangier Island
+                [min longitude, min latitude, max longitude, max latitude]
 
         Returns:
             (GeoDataFrame): Collected data in EPSG:4326 coordinate reference system
@@ -51,32 +51,31 @@ class OpenSkyProvider:
         value_check_within(obj=bbx[3], min=-90, max=90, object_name="max_latitude")
 
         # Request, prepare and return data
-        gdf = self.request_vertices(time_start, time_end, bbx)
-        prepared_gdf = self.prepare_vertices(gdf)
+        gdf = self._request_vertices(time_start, time_end, bbx)
+        prepared_gdf = self._prepare_vertices(gdf)
 
         for identifier in prepared_gdf["identifier"].unique():
             flight_vertices = prepared_gdf[prepared_gdf["identifier"] == identifier]
-            
-            yield Flight(
-                callsign=flight_vertices["callsign"].iloc[0],
-                geometry=LineString(flight_vertices.geometry),
-                time_range=(
-                    flight_vertices["time"].min(),
-                    flight_vertices["time"].max(),
-                ),
-                properties={"icao24": flight_vertices["icao24"].iloc[0]},
-                vertices=flight_vertices
-            )
+            if len(flight_vertices) > 1:
+                yield Flight(
+                    callsign=flight_vertices["callsign"].iloc[0],
+                    geometry=LineString(flight_vertices.geometry),
+                    time_range=(
+                        flight_vertices["time"].min(),
+                        flight_vertices["time"].max(),
+                    ),
+                    properties={"icao24": flight_vertices["icao24"].iloc[0]},
+                    vertices=flight_vertices,
+                )
 
-    def prepare_vertices(self, gdf):
+    def _prepare_vertices(self, gdf):
         cropped_gdf = gdf[["callsign", "icao24", "time", "geometry"]].copy()
         cropped_gdf["identifier"] = cropped_gdf[["callsign", "icao24"]].agg(
             "-".join, axis=1
         )
         return cropped_gdf
 
-
-    def request_vertices(self, time_start, time_end, bbx):
+    def _request_vertices(self, time_start, time_end, bbx):
         df = self.trino.history(start=time_start, stop=time_end, bounds=bbx)
 
         if df is None:
