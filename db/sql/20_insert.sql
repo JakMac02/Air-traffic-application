@@ -2,14 +2,14 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 
 
 CREATE TABLE flight(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     callsign TEXT NOT NULL,
     time_range tsrange,
     geometry geometry(LINESTRINGZ,4326) NOT NULL
 );
 
 CREATE TABLE vertex(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     time timestamp without time zone NOT NULL,
     onground BOOL,
     alert BOOL,
