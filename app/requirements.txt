@@ -1,4 +1,5 @@
 pyopensky==2.18
 geopandas==1.2.0
+GeoAlchemy2[shapely]==0.21.0
 psycopg2-binary==2.9.13
 numpy==2.5.4

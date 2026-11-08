@@ -2,26 +2,30 @@ services:
   db:
     image: docker.io/postgis/postgis:18-3.6-alpine
     container_name: db
-    ports: 5432:5432
+    ports: "5432:5432"
     env_file:
       - conf/.env
-    network:
+    networks:
       - db_network
     volumes:
       - pgdata:/var/lib/postgresql
       - ./db/sql:/docker-entrypoint-initdb.d:Z
 
   app:
+    container_name: app
     build: app/.
     env_file:
       - conf/.env
     volumes:
       - ./conf/settings.conf:/root/.config/pyopensky/settings.conf
+    networks:
+      - db_network
     depends_on:
       - db
+      
 
 
-network:
+networks:
   db_network:
   
 volumes:

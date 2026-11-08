@@ -4,8 +4,9 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE flight(
     id UUID PRIMARY KEY,
     callsign TEXT NOT NULL,
-    time_range tsrange,
-    geometry geometry(LINESTRINGZ,4326) NOT NULL
+    time_start TIMESTAMP,
+    time_end TIMESTAMP,
+    geometry geometry(LINESTRING,4326) NOT NULL
 );
 
 CREATE TABLE vertex(
@@ -17,7 +18,7 @@ CREATE TABLE vertex(
     velocity REAL,
     vertrate REAL,
     geometry geometry(POINT,4326) NOT NULL,
-    flight_id INT,
+    flight_id UUID,
     FOREIGN KEY(flight_id)
        REFERENCES flight(id)
        ON DELETE CASCADE

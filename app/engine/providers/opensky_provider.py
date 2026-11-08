@@ -27,7 +27,7 @@ class OpenSkyProvider:
             time_start(datetime.datetime): The time from which data is collected
             time_end(datetime.datetime): The time up until which data is collected
             bbx(Tuple[float, float, float, float]): A bounding box determining the area
-                for which data is collected. Must be in format:
+                for which data is collected. opMust be in format:
                 [min longitude, min latitude, max longitude, max latitude]
 
         Returns:
@@ -57,14 +57,15 @@ class OpenSkyProvider:
         for identifier in prepared_gdf["identifier"].unique():
             flight_vertices = prepared_gdf[prepared_gdf["identifier"] == identifier]
             if len(flight_vertices) > 1:
+                icao24 = flight_vertices["icao24"].iloc[0]
+                call = flight_vertices["callsign"].iloc[0]
+                flight_vertices = flight_vertices.drop(columns=["callsign", "icao24", "identifier"])
                 yield Flight(
-                    callsign=flight_vertices["callsign"].iloc[0],
+                    callsign=call,
                     geometry=LineString(flight_vertices.geometry),
-                    time_range=(
-                        flight_vertices["time"].min(),
-                        flight_vertices["time"].max(),
-                    ),
-                    properties={"icao24": flight_vertices["icao24"].iloc[0]},
+                    time_start=flight_vertices["time"].min(),
+                    time_end=flight_vertices["time"].max(),
+                    properties={"icao24": icao24},
                     vertices=flight_vertices,
                 )
 

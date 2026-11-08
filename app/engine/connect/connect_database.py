@@ -20,7 +20,7 @@ class DataBaseConnector:
 
     def _db_url(self):
         return URL.create(
-            "postgresql",
+            "postgresql+psycopg2",
             username=self.user,
             password=self.password,
             host=self.host,
@@ -33,32 +33,45 @@ class DataBaseConnector:
     def insert_flights(self, flights: list[Flight]):
         engine = self._engine()
 
-        ids, callsings, geometries, time_ranges, vertices = [], [], [], [], []    
+        flights_gdf, vertices_gdf = self._flights_to_gdfs(flights)
+        flights_gdf.to_postgis("flight", engine, if_exists="append", index=False)
+        vertices_gdf.to_postgis("vertex", engine, if_exists="append", index=False)
+
+    def _flights_to_gdfs(
+        self, flights: list[Flight]
+    ) -> tuple[GeoDataFrame, GeoDataFrame]:
+        ids, callsings, geometries, time_starts, time_ends, vertices = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
 
         for f in flights:
-            i, call, t, geom, p = f.get_params()
+            print(f)
+            i, call, t_start, t_end, geom, p = f.get_params()
             ids.append(i)
             callsings.append(call)
             geometries.append(geom)
-            time_ranges.append(t)
+            time_starts.append(t_start)
+            time_ends.append(t_end)
             v = f.vertices
             v["flight_id"] = i
             vertices.append(v)
+            print(v.columns, flush=True)
 
-        flights_gdf = GeoDataFrame(
-            {
-                "id": ids,
-                "callsign": callsings,
-                "time_range": time_ranges, 
-            },
-            geometry=geometries,
-            crs=4326,
+        return (
+            GeoDataFrame(
+                {
+                    "id": ids,
+                    "callsign": callsings,
+                    "time_start": time_starts,
+                    "time_end": time_ends,
+                },
+                geometry=geometries,
+                crs=4326,
+            ),
+            GeoDataFrame(concat(vertices), crs=4326),
         )
-
-        vertices_gdf = GeoDataFrame(concat(vertices), crs=4326)
-
-        flights_gdf.to_postgis("flight", engine, if_exists="append", index=False)
-        vertices_gdf.to_postgis("vertex", engine, if_exists="append", index=False)
-        
-    
-
