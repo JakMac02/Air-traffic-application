@@ -27,7 +27,7 @@ class OpenSkyProvider:
             time_start(datetime.datetime): The time from which data is collected
             time_end(datetime.datetime): The time up until which data is collected
             bbx(Tuple[float, float, float, float]): A bounding box determining the area
-                for which data is collected. opMust be in format:
+                for which data is collected. Must be in format:
                 [min longitude, min latitude, max longitude, max latitude]
 
         Returns:
@@ -59,7 +59,11 @@ class OpenSkyProvider:
             if len(flight_vertices) > 1:
                 icao24 = flight_vertices["icao24"].iloc[0]
                 call = flight_vertices["callsign"].iloc[0]
-                flight_vertices = flight_vertices.drop(columns=["callsign", "icao24", "identifier"])
+                flight_vertices = flight_vertices.drop(
+                    columns=["callsign", "icao24", "identifier"]
+                )
+                print("columns:", flight_vertices.columns, flush=True)
+                print(flight_vertices.head(), flush=True)
                 yield Flight(
                     callsign=call,
                     geometry=LineString(flight_vertices.geometry),
@@ -77,7 +81,25 @@ class OpenSkyProvider:
         return cropped_gdf
 
     def _request_vertices(self, time_start, time_end, bbx):
-        df = self.trino.history(start=time_start, stop=time_end, bounds=bbx)
+        df = self.trino.history(
+            start=time_start, 
+            stop=time_end, 
+            bounds=bbx,
+            selected_columns=(
+                "time",
+                "icao24",
+                "callsign",
+                "lat",
+                "lon",                
+                "baroaltitude",
+                "onground",
+                "velocity",
+                "heading",
+                "vertrate",
+            ),
+        )
+        print(df.columns)
+        print(df.head())
 
         if df is None:
             raise Exception("No aviation data collected!")

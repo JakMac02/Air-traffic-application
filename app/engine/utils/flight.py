@@ -22,7 +22,7 @@ class Flight:
         self.time_start: datetime = time_start
         self.time_end: datetime = time_end
         self.properties: dict = properties
-        vertices['Address'] = self.id
+        # vertices["Address"] = self.id
         self.vertices: GeoDataFrame = vertices
 
     def get_params(

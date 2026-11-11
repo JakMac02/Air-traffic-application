@@ -10,7 +10,7 @@ CREATE TABLE flight(
 );
 
 CREATE TABLE vertex(
-    id UUID PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     time timestamp without time zone NOT NULL,
     onground BOOL,
     alert BOOL,
