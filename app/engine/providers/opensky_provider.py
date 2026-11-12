@@ -98,8 +98,6 @@ class OpenSkyProvider:
                 "vertrate",
             ),
         )
-        print(df.columns)
-        print(df.head())
 
         if df is None:
             raise Exception("No aviation data collected!")
