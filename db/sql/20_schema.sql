@@ -12,7 +12,7 @@ CREATE TABLE flight(
 CREATE TABLE vertex(
     id SERIAL PRIMARY KEY,
     time timestamp without time zone NOT NULL,
-    onground BOOL,
+    baroaltitude REAL,
     alert BOOL,
     heading REAL,
     velocity REAL,

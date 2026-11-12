@@ -74,23 +74,34 @@ class OpenSkyProvider:
                 )
 
     def _prepare_vertices(self, gdf):
-        cropped_gdf = gdf[["callsign", "icao24", "time", "geometry"]].copy()
-        cropped_gdf["identifier"] = cropped_gdf[["callsign", "icao24"]].agg(
-            "-".join, axis=1
+        cropped_gdf = gdf[
+            [
+                "callsign",
+                "icao24",
+                "time",
+                "geometry",
+                "baroaltitude",
+                "velocity",
+                "heading",
+                "vertrate",
+            ]
+        ].copy()
+        cropped_gdf["identifier"] = (
+            cropped_gdf["callsign"] + "-" + cropped_gdf["icao24"]
         )
         return cropped_gdf
 
     def _request_vertices(self, time_start, time_end, bbx):
         df = self.trino.history(
-            start=time_start, 
-            stop=time_end, 
+            start=time_start,
+            stop=time_end,
             bounds=bbx,
             selected_columns=(
                 "time",
                 "icao24",
                 "callsign",
                 "lat",
-                "lon",                
+                "lon",
                 "baroaltitude",
                 "onground",
                 "velocity",
