@@ -50,7 +50,6 @@ class DataBaseConnector:
         )
 
         for f in flights:
-            print(f)
             i, call, t_start, t_end, geom, p = f.get_params()
             ids.append(i)
             callsings.append(call)
@@ -60,7 +59,6 @@ class DataBaseConnector:
             v = f.vertices
             v["flight_id"] = i
             vertices.append(v)
-            print(v.columns, flush=True)
 
         return (
             GeoDataFrame(
@@ -74,4 +72,10 @@ class DataBaseConnector:
                 crs=4326,
             ),
             GeoDataFrame(concat(vertices), crs=4326),
+        )
+
+    def insert_airports(self, airports_gdf: GeoDataFrame):
+        engine = self._engine()
+        airports_gdf.to_postgis(
+            "meteo_station", engine, if_exists="append", index=False
         )
