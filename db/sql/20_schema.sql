@@ -4,8 +4,8 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE flight(
     id UUID PRIMARY KEY,
     callsign TEXT NOT NULL,
-    time_start TIMESTAMP,
-    time_end TIMESTAMP,
+    time_start TIMESTAMPZ,
+    time_end TIMESTAMPZ,
     geometry geometry(LINESTRING,4326) NOT NULL
 );
 
@@ -25,7 +25,33 @@ CREATE TABLE vertex(
 );
 
 
+CREATE TABLE meteo_station(
+    id SERIAL PRIMARY KEY,
+    icao_code CHAR(4) NOT NULL UNIQUE,
+    geometry geometry(POINT, 4326) NOT NULL
+)
+
+
+CREATE TABLE weather(
+    id SERIAL PRIMARY KEY,
+    icao_code CHAR(4) NOT NULL REFERENCES meteo_station (icao_code),
+    time TIMESTAMPZ,
+    temperature REAL,
+    dew_point REAL,
+    wind_speed REAL,
+    wind_dir REAL,
+    wind_gust REAL,
+    visibility REAL,
+    pressure REAL,
+    pressure REAL,
+    precipitation REAL,
+    description TEXT,
+    raw_metar TEXT NOT NULL
+)
+
+
 CREATE INDEX flight_geometry_idx ON flight USING GIST (geometry);
 CREATE INDEX flight_callsign_idx ON flight(callsign);
 CREATE INDEX vertex_geometry_idx ON vertex USING GIST (geometry);
 CREATE INDEX vertex_time_idx ON vertex(time);
+CREATE INDEX meteo_station_point_idx ON meteo_station USING gist (geom);

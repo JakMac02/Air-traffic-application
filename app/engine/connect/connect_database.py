@@ -73,3 +73,9 @@ class DataBaseConnector:
             ),
             GeoDataFrame(concat(vertices), crs=4326),
         )
+
+    def insert_airports(self, airports_gdf: GeoDataFrame):
+        engine = self._engine()
+        airports_gdf.to_postgis(
+            "meteo_station", engine, if_exists="append", index=False
+        )

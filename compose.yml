@@ -18,6 +18,7 @@ services:
       - conf/.env
     volumes:
       - ./conf/settings.conf:/root/.config/pyopensky/settings.conf
+      - ./input:/input:ro,Z
     networks:
       - db_network
     depends_on:
