@@ -1,9 +1,9 @@
 # Air-traffic-application
-This appliacation is dedicated to acquiring, storing and processing air traffic data.
+This application is dedicated to acquiring, storing and processing air traffic data.
 
 
 
-# How to use it?
+## How to use it?
 
 ```bash
 podman compose up --build -d 
