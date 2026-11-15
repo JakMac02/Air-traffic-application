@@ -62,8 +62,7 @@ class OpenSkyProvider:
                 flight_vertices = flight_vertices.drop(
                     columns=["callsign", "icao24", "identifier"]
                 )
-                print("columns:", flight_vertices.columns, flush=True)
-                print(flight_vertices.head(), flush=True)
+
                 yield Flight(
                     callsign=call,
                     geometry=LineString(flight_vertices.geometry),

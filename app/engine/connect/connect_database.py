@@ -4,6 +4,7 @@ from geopandas import GeoDataFrame
 from pandas import DataFrame, concat
 from sqlalchemy import create_engine, URL
 from sqlalchemy.exc import IntegrityError
+from pandas import DataFrame, concat, to_datetime
 
 
 POSTGRES_USER = os.environ["POSTGRES_USER"]
@@ -59,6 +60,7 @@ class DataBaseConnector:
             time_ends.append(t_end)
             v = f.vertices
             v["flight_id"] = i
+            v["time"] = to_datetime(v["time"], utc=True)
             vertices.append(v)
 
         return (
@@ -66,8 +68,8 @@ class DataBaseConnector:
                 {
                     "id": ids,
                     "callsign": callsings,
-                    "time_start": time_starts,
-                    "time_end": time_ends,
+                    "time_start": to_datetime(time_starts, utc=True),
+                    "time_end": to_datetime(time_ends, utc=True),
                 },
                 geometry=geometries,
                 crs=4326,

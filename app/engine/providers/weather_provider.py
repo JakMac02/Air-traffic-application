@@ -1,8 +1,8 @@
 import csv
-from datetime import datetime, timezone
 from metar import Metar
 from pathlib import Path
 from pandas import DataFrame
+from datetime import datetime, timezone
 
 
 class WeatherProvider:
@@ -14,7 +14,9 @@ class WeatherProvider:
         rows = []
 
         with open(self.path_to_file, "r") as f:
-            reader_obj = csv.reader(f)
+            delimiter = "\t" if "\t" in f.readline() else ","
+            f.seek(0)
+            reader_obj = csv.reader(f, delimiter=delimiter)
             for row in reader_obj:
                 try:
                     dt = datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S").replace(
