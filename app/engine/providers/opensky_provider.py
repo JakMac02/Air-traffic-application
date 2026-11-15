@@ -1,6 +1,4 @@
 from typing import Tuple
-from shapely import Point
-from pandas import date_range
 from datetime import datetime
 from shapely import LineString
 from ..utils.flight import Flight

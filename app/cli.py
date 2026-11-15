@@ -56,7 +56,7 @@ def get_flights(start: str, stop: str, bbx: tuple[float, float, float, float]):
     ]
 
     db.insert_flights(flights)
-    
+
     click.echo(f"Processed {len(flights)} flights.")
 
 
