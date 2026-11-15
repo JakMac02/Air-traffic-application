@@ -1,6 +1,7 @@
 import os
 from ..utils.flight import Flight
 from geopandas import GeoDataFrame
+from pandas import DataFrame, concat
 from sqlalchemy import create_engine, URL
 from sqlalchemy.exc import IntegrityError
 from pandas import DataFrame, concat, to_datetime

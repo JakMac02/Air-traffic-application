@@ -1,8 +1,8 @@
 import csv
-from datetime import datetime, timezone
 from metar import Metar
 from pathlib import Path
 from pandas import DataFrame
+from datetime import datetime, timezone
 
 
 class WeatherProvider:
