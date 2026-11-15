@@ -1,8 +1,9 @@
 import os
-from pandas import concat
 from ..utils.flight import Flight
 from geopandas import GeoDataFrame
+from pandas import DataFrame, concat
 from sqlalchemy import create_engine, URL
+from sqlalchemy.exc import IntegrityError
 
 
 POSTGRES_USER = os.environ["POSTGRES_USER"]
@@ -79,3 +80,12 @@ class DataBaseConnector:
         airports_gdf.to_postgis(
             "meteo_station", engine, if_exists="append", index=False
         )
+
+
+    def insert_metars(self, metars: DataFrame):
+        engine = self._engine()
+        try:
+            metars.to_sql("weather", engine, if_exists="append", index=False)
+        except IntegrityError as e:
+            print(f"Insert failed, nothing was saved: {e.orig}")
+            raise SystemExit(1)
