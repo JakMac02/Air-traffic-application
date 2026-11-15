@@ -1,5 +1,4 @@
 from typing import Any
-from datetime import datetime
 
 
 def type_check(obj: Any, expected_type: type | tuple[type, ...], object_name: str):

@@ -83,7 +83,6 @@ class DataBaseConnector:
             "meteo_station", engine, if_exists="append", index=False
         )
 
-
     def insert_metars(self, metars: DataFrame):
         engine = self._engine()
         try:
